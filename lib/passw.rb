@@ -19,16 +19,18 @@ module Passw
     buffer += lowercase if defaults[:lowercase]
     buffer += uppercase if defaults[:uppercase]
     buffer += symbols   if defaults[:symbols]
-    buffer += numbers   if defaults[:numbers]   
+    buffer += numbers   if defaults[:numbers]
     
     base = []
     
+    buffer_length = buffer.length
+
     (0...length).each do |i|
       if defaults[:deplicates]
-        base << buffer[srand % buffer.length]
+        base << buffer[srand % buffer_length]
       else
         loop do
-          candidate = buffer[srand % buffer.length]
+          candidate = buffer[srand % buffer_length]
           
           if !base.include? candidate
             base << candidate
@@ -60,4 +62,4 @@ module Passw
   end
 end
 
-puts Passw.generate(10)
+puts Passw.generate(10, {duplicates: true})
