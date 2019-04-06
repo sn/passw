@@ -5,11 +5,11 @@ module Passw
   # +options+:: a hash defining the attributes for the password
   def self.generate(length, options = {})
     defaults = {
-      lowercase:  true,
-      uppercase:  true,
-      symbols:    true,
-      numbers:    true,
-      duplicates: true
+      lowercase:  true, # Allow lower case characters
+      uppercase:  true, # Allow uppercase characters
+      symbols:    true, # Allow symbols
+      numbers:    true, # Allow numbers 
+      duplicates: true  # Allow characters to be duplicated (less secure if true)
     }
     
     defaults.merge!(options)
@@ -26,7 +26,7 @@ module Passw
     buffer_length = buffer.length
 
     (0...length).each do |i|
-      if defaults[:deplicates]
+      if defaults[:duplicates]
         base << buffer[srand % buffer_length]
       else
         loop do
@@ -36,6 +36,11 @@ module Passw
             base << candidate
             break
           end
+          
+          # Ensure that this loop does not run forever if duplicates are disallowed
+          # In this case, we're limited to the collective size of buffered characters
+          
+          break if base.length == buffer_length - 1
         end
       end
     end
@@ -46,7 +51,7 @@ module Passw
   private 
 
   def self.symbols
-    %w[! " ' # $ % & % ( ) * + , - . / : ; < = > ? ` ~ { | }]
+    %w[! " ' # $ % & ( ) * + , - . / : ; < = > ? ` ~ { | } @ ^]
   end
 
   def self.lowercase
@@ -61,5 +66,3 @@ module Passw
     %w[0 1 2 3 4 5 6 7 8 9]
   end
 end
-
-puts Passw.generate(10, {duplicates: true})
