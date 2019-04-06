@@ -33,7 +33,7 @@ Passw.generate(12) # => ^IUH91234la*
 Available Options
 -----------------
 
-Wobbly supports the following tokens and combinations of them:
+Passw supports the following options and combinations of them:
 
 - 'lowercase' 
 - 'uppercase' 
@@ -45,7 +45,21 @@ Examples
 -----------------
 
 ```ruby
+# Generate a secure password of 12 characters in length
+Passw.generate(12)
 
+# Output => `|vwr8j5VV8W
+
+# Options available for the password generation
+Passw.generate(12, {
+  lowercase:  true, # Allow lower case characters
+  uppercase:  true, # Allow uppercase characters
+  symbols:    true, # Allow symbols
+  numbers:    true, # Allow numbers 
+  duplicates: false  # Allow characters to be duplicated (less secure if true)	
+})
+
+# Outout => qU.b"fo+P>Wl
 ```
 
 Running the tests

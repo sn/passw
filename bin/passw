@@ -1,14 +1,10 @@
 #!/usr/bin/env ruby
 
 require 'rubygems'
-require File.expand_path('../lib/wobbly', File.dirname(__FILE__))
+require File.expand_path('../lib/passw', File.dirname(__FILE__))
 
-
-
-
-
-# if !ARGV.empty?
-#   puts Wobbly.in(ARGV[0])
-# else
-#   puts "Usage: wobbly 1h2m"
-# end
+if !ARGV.empty?
+  puts Passw.generate(ARGV[0])
+else
+  puts "Passw Usage: passw <length>"
+end
