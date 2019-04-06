@@ -1,6 +1,6 @@
-## Passw: Easy secure password generation for Ruby
+## Easy & secure password generation for Ruby
 
-`passw` generates flexible, secure passwords for your Ruby applications. 
+A Ruby Gem that allows you to generate secure passwords programmatically or via the terminal.
 
 Requirements
 -----------------
