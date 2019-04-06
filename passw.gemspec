@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'passw'
-  s.version     = '0.0.1'
+  s.version     = '1.0.0'
   s.date        = '2019-04-06'
   s.summary     = 'Passw is a simple, customizable password generator for Ruby'
   s.description = 'Passw is a simple, customizable password generator for Ruby that allows you to generate secure passwords easily'

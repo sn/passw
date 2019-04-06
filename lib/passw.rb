@@ -25,7 +25,7 @@ module Passw
     
     buffer_length = buffer.length
 
-    (0...length).each do |i|
+    (0...length.to_i).each do |i|
       if defaults[:duplicates]
         base << buffer[srand % buffer_length]
       else

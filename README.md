@@ -35,11 +35,11 @@ Available Options
 
 Passw supports the following options and combinations of them:
 
-- 'lowercase' 
-- 'uppercase' 
-- 'symbols' 
-- 'numbers'
-- 'duplicates'
+- `:lowercase`
+- `:uppercase`
+- `:symbols`
+- `:numbers`
+- `:duplicates`
 
 Examples
 -----------------
@@ -60,6 +60,15 @@ Passw.generate(12, {
 })
 
 # Outout => qU.b"fo+P>Wl
+```
+
+Executable
+-----------------
+
+This gem also includes an executable that can be called directly from the terminal:
+
+```
+passw <password length>
 ```
 
 Running the tests

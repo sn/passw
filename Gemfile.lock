@@ -1,0 +1,21 @@
+PATH
+  remote: .
+  specs:
+    passw (0.0.1)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    minitest (5.11.3)
+    rake (10.5.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  minitest (~> 5.7, >= 5.7.0)
+  passw!
+  rake (~> 10.4, >= 10.4.2)
+
+BUNDLED WITH
+   1.15.4
