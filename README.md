@@ -88,4 +88,4 @@ Please see [LICENSE](https://github.com/SeanNieuwoudt/passw/blob/master/LICENSE)
 Author
 -----------------
 
-Sean Nieuwoudt, [@SeanNieuwoudt](https://twitter.com/seannieuwoudt) / [http://isean.co.za](http://isean.co.za)
+[@sn](https://github.com/sn)
