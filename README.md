@@ -88,4 +88,4 @@ Please see [LICENSE](https://github.com/SeanNieuwoudt/passw/blob/master/LICENSE)
 Author
 -----------------
 
-[@sn](https://github.com/sn)
+[@sn](https://github.com/sn) / [github.com/sn](https://github.com/sn) 
