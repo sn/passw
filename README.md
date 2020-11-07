@@ -83,7 +83,7 @@ rake test
 License
 -----------------
 
-Please see [LICENSE](https://github.com/SeanNieuwoudt/passw/blob/master/LICENSE) for licensing details.
+Please see [LICENSE](https://github.com/sn/passw/blob/master/LICENSE) for licensing details.
 
 Author
 -----------------
