@@ -1,10 +1,80 @@
 #!/usr/bin/env ruby
 
+require 'optparse'
 require 'rubygems'
-require File.expand_path('../lib/passw', File.dirname(__FILE__))
+require_relative '../lib/passw'
 
-if !ARGV.empty?
-  puts Passw.generate(ARGV[0])
-else
-  puts "Passw Usage: passw <length>"
+# Default options
+options = {
+  lowercase: true,
+  uppercase: true,
+  symbols: true,
+  numbers: true,
+  duplicates: true,
+  enforce_types: true,
+  avoid_sequences: false,
+  exclude: [],
+  min_length: 8
+}
+
+# Define and parse options
+OptionParser.new do |opts|
+  opts.banner = "Usage: passw <length> [options]"
+
+  opts.on("-l", "--lowercase", "Include lowercase letters (default: true)") do
+    options[:lowercase] = true
+  end
+
+  opts.on("-u", "--uppercase", "Include uppercase letters (default: true)") do
+    options[:uppercase] = true
+  end
+
+  opts.on("-s", "--symbols", "Include symbols (default: true)") do
+    options[:symbols] = true
+  end
+
+  opts.on("-n", "--numbers", "Include numbers (default: true)") do
+    options[:numbers] = true
+  end
+
+  opts.on("-d", "--no-duplicates", "Disallow duplicate characters") do
+    options[:duplicates] = false
+  end
+
+  opts.on("-e", "--enforce-types", "Ensure at least one of each selected type (default: true)") do
+    options[:enforce_types] = true
+  end
+
+  opts.on("-a", "--avoid-sequences", "Avoid sequential characters") do
+    options[:avoid_sequences] = true
+  end
+
+  opts.on("-x", "--exclude CHARS", "Exclude specific characters (comma-separated, e.g., 'O,0,I,l')") do |chars|
+    options[:exclude] = chars.split(',')
+  end
+
+  opts.on("-m", "--min-length LENGTH", Integer, "Set minimum password length (default: 8)") do |min_length|
+    options[:min_length] = min_length
+  end
+
+  opts.on("-h", "--help", "Prints this help") do
+    puts opts
+    exit
+  end
+end.parse!
+
+# Ensure length is provided and valid
+if ARGV.empty?
+  puts "Error: You must specify a password length."
+  puts "Usage: passw <length> [options]"
+  exit
 end
+
+length = ARGV[0].to_i
+if length <= 0
+  puts "Error: Please enter a valid positive integer for length."
+  exit
+end
+
+# Generate and print the password
+puts Passw.generate(length, options)

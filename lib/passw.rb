@@ -1,68 +1,120 @@
 module Passw
-  # Generate a password with the sepecified options
+  # Generate a password with specified options
   # Params:
   # +length+:: the length of the password
   # +options+:: a hash defining the attributes for the password
   def self.generate(length, options = {})
     defaults = {
-      lowercase:  true, # Allow lower case characters
-      uppercase:  true, # Allow uppercase characters
-      symbols:    true, # Allow symbols
-      numbers:    true, # Allow numbers 
-      duplicates: true  # Allow characters to be duplicated (less secure if true)
+      lowercase:        true,  # Allow lowercase characters
+      uppercase:        true,  # Allow uppercase characters
+      symbols:          true,  # Allow symbols
+      numbers:          true,  # Allow numbers
+      duplicates:       true,  # Allow duplicates
+      enforce_types:    true,  # Ensure at least one of each selected character type
+      avoid_sequences:  true,  # Avoid sequential/repeating characters
+      exclude:          [],    # Characters to exclude from password
+      min_length:       8      # Minimum password length
     }
-    
-    defaults.merge!(options)
-    
-    buffer = []
-    
-    buffer += lowercase if defaults[:lowercase]
-    buffer += uppercase if defaults[:uppercase]
-    buffer += symbols   if defaults[:symbols]
-    buffer += numbers   if defaults[:numbers]
-    
-    base = []
-    
-    buffer_length = buffer.length
 
-    (0...length.to_i).each do |i|
-      if defaults[:duplicates]
-        base << buffer[srand % buffer_length]
+    # Merge user options with defaults
+    settings = defaults.merge(options)
+
+    # Enforce minimum length
+    length = [length.to_i, settings[:min_length]].max
+
+    # Build character set based on options
+    character_set = build_character_set(settings)
+    return '' if character_set.empty?
+
+    # Filter out excluded characters
+    character_set -= settings[:exclude]
+
+    # Generate the password with necessary character types enforced
+    password = generate_password(character_set, length, settings)
+
+    # Calculate and display password entropy
+    entropy = calculate_entropy(character_set.size, length)
+
+    password.shuffle.join
+  end
+
+  private
+
+  # Build the character set based on the specified options
+  def self.build_character_set(settings)
+    character_set = []
+    character_set += lowercase if settings[:lowercase]
+    character_set += uppercase if settings[:uppercase]
+    character_set += symbols   if settings[:symbols]
+    character_set += numbers   if settings[:numbers]
+    character_set
+  end
+
+  # Generate the password based on options
+  def self.generate_password(character_set, length, settings)
+    password = []
+
+    # Ensure at least one character from each type if enforce_types is enabled
+    if settings[:enforce_types]
+      password << lowercase.sample if settings[:lowercase]
+      password << uppercase.sample if settings[:uppercase]
+      password << symbols.sample if settings[:symbols]
+      password << numbers.sample if settings[:numbers]
+    end
+
+    # Fill the rest of the password
+    while password.length < length
+      candidate = character_set.sample
+
+      if settings[:duplicates]
+        password << candidate
       else
-        loop do
-          candidate = buffer[srand % buffer_length]
-          
-          if !base.include? candidate
-            base << candidate
-            break
-          end
-          
-          # Ensure that this loop does not run forever if duplicates are disallowed
-          # In this case, we're limited to the collective size of buffered characters
-          
-          break if base.length == buffer_length - 1
+        # Avoid duplicates if duplicates option is false
+        next if password.include?(candidate)
+        password << candidate
+      end
+
+      # Avoid sequences/repeating characters if avoid_sequences is true
+      if settings[:avoid_sequences] && password.size > 1
+        next_char = password[-1]
+        prev_char = password[-2]
+        if next_char.ord == prev_char.ord + 1 || next_char.ord == prev_char.ord - 1
+          password.pop
         end
       end
     end
-    
-    base.shuffle.join
+    password
   end
 
-  private 
+  # Entropy calculation
+  def self.calculate_entropy(charset_size, length)
+    (Math.log2(charset_size) * length).round(2)
+  end
+
+  # Assess password strength based on entropy value
+  def self.password_strength(entropy)
+    case entropy
+    when 0..27   then "Very Weak"
+    when 28..35  then "Weak"
+    when 36..59  then "Reasonable"
+    when 60..127 then "Strong"
+    else              "Very Strong"
+    end
+  end
 
   def self.symbols
     %w[! " ' # $ % & ( ) * + , - . / : ; < = > ? ` ~ { | } @ ^]
   end
 
   def self.lowercase
-    %w[a b c d e f g h i j k l m n o p q r s t u v w x y z]
-  end  
+    ('a'..'z').to_a
+  end
 
   def self.uppercase
-    %w[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]
-  end    
+    ('A'..'Z').to_a
+  end
 
   def self.numbers
-    %w[0 1 2 3 4 5 6 7 8 9]
+    ('0'..'9').to_a
   end
 end
