@@ -132,6 +132,13 @@ To run the tests for `passw`, run:
 
 ```bash
 rake test
+
+# Running:
+........
+
+Finished in 0.000668s, 11976.0479 runs/s, 70359.2814 assertions/s.
+
+8 runs, 47 assertions, 0 failures, 0 errors, 0 skips
 ```
 
 License
