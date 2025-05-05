@@ -1,4 +1,4 @@
-## Flexible and Secure Password Generation for Rub
+## Flexible and Secure Password Generation for Ruby
 
 Passw is a Ruby gem for generating secure, customizable passwords programmatically or directly via the terminal. It offers advanced options for character type enforcement, exclusion lists, entropy-based strength assessment, and more.
 
