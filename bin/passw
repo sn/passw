@@ -77,4 +77,5 @@ if length <= 0
 end
 
 # Generate and print the password
-puts Passw.generate(length, options)
+result = Passw.generate(length, options)
+puts result[:password]
