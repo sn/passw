@@ -3,23 +3,26 @@ require_relative '../lib/passw'
 
 class PasswTest < Minitest::Test
   def test_generate_with_default_options
-    password = Passw.generate(12)
-    assert_equal 12, password.length
+    result = Passw.generate(12)
+    assert_equal 12, result[:password].length
+    assert result[:entropy] > 0
+    assert_includes ['Very Weak', 'Weak', 'Reasonable', 'Strong', 'Very Strong'], result[:strength]
   end
 
   def test_generate_with_minimum_length
-    password = Passw.generate(6, min_length: 10)
-    assert_operator password.length, :>=, 10
+    result = Passw.generate(6, min_length: 10)
+    assert_operator result[:password].length, :>=, 10
   end
 
   def test_generate_enforcing_character_types
-    password = Passw.generate(12, {
+    result = Passw.generate(12, {
       lowercase: true,
       uppercase: true,
       symbols: true,
       numbers: true,
       enforce_types: true
     })
+    password = result[:password]
 
     assert_match(/[a-z]/, password, "Password should contain lowercase letters")
     assert_match(/[A-Z]/, password, "Password should contain uppercase letters")
@@ -28,7 +31,8 @@ class PasswTest < Minitest::Test
   end
 
   def test_generate_with_exclude_characters
-    password = Passw.generate(12, exclude: ['O', '0', 'I', 'l'])
+    result = Passw.generate(12, exclude: ['O', '0', 'I', 'l'])
+    password = result[:password]
     refute_includes password.chars, 'O', "Password should not contain 'O'"
     refute_includes password.chars, '0', "Password should not contain '0'"
     refute_includes password.chars, 'I', "Password should not contain 'I'"
@@ -36,12 +40,14 @@ class PasswTest < Minitest::Test
   end
 
   def test_generate_without_duplicates
-    password = Passw.generate(12, duplicates: false)
+    result = Passw.generate(12, duplicates: false)
+    password = result[:password]
     assert_equal password.length, password.chars.uniq.length, "Password should have no duplicate characters"
   end
 
   def test_generate_avoiding_sequences
-    password = Passw.generate(12, avoid_sequences: true)
+    result = Passw.generate(12, avoid_sequences: true)
+    password = result[:password]
     assert_no_sequences(password)
   end
 
@@ -60,13 +66,42 @@ class PasswTest < Minitest::Test
     assert_equal "Very Strong", Passw.send(:password_strength, 130)
   end
 
+  def test_input_validation
+    assert_raises(ArgumentError) { Passw.generate(0) }
+    assert_raises(ArgumentError) { Passw.generate(-5) }
+    assert_raises(Passw::InvalidConstraintsError) {
+      Passw.generate(12, lowercase: false, uppercase: false, symbols: false, numbers: false)
+    }
+  end
+
+  def test_impossible_constraints
+    assert_raises(Passw::InvalidConstraintsError) {
+      Passw.generate(2, enforce_types: true, lowercase: true, uppercase: true, symbols: true, numbers: true)
+    }
+    assert_raises(Passw::InvalidConstraintsError) {
+      Passw.generate(100, duplicates: false, lowercase: true, uppercase: false, symbols: false, numbers: false)
+    }
+  end
+
+  def test_return_format
+    result = Passw.generate(12)
+    assert result.is_a?(Hash)
+    assert result.key?(:password)
+    assert result.key?(:entropy)
+    assert result.key?(:strength)
+    assert result[:password].is_a?(String)
+    assert result[:entropy].is_a?(Float)
+    assert result[:strength].is_a?(String)
+  end
+
   private
 
   # Helper method to ensure there are no sequential characters
   def assert_no_sequences(password)
     password.chars.each_cons(2) do |a, b|
-      refute_equal a.ord, b.ord - 1, "Password contains sequential characters"
-      refute_equal a.ord, b.ord + 1, "Password contains sequential characters"
+      refute_equal a.ord, b.ord - 1, "Password contains sequential characters: #{a}#{b}"
+      refute_equal a.ord, b.ord + 1, "Password contains sequential characters: #{a}#{b}"
+      refute_equal a, b, "Password contains repeating characters: #{a}#{b}"
     end
   end
 end

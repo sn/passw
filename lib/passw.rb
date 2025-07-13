@@ -1,8 +1,13 @@
+require 'securerandom'
+
 module Passw
+  class InvalidConstraintsError < StandardError; end
+
   # Generate a password with specified options
   # Params:
   # +length+:: the length of the password
   # +options+:: a hash defining the attributes for the password
+  # Returns a hash with :password and :entropy keys
   def self.generate(length, options = {})
     defaults = {
       lowercase:        true,  # Allow lowercase characters
@@ -19,6 +24,9 @@ module Passw
     # Merge user options with defaults
     settings = defaults.merge(options)
 
+    # Validate inputs
+    validate_inputs(length, settings)
+
     # Enforce minimum length
     length = [length.to_i, settings[:min_length]].max
 
@@ -32,10 +40,15 @@ module Passw
     # Generate the password with necessary character types enforced
     password = generate_password(character_set, length, settings)
 
-    # Calculate and display password entropy
+    # Calculate password entropy
     entropy = calculate_entropy(character_set.size, length)
 
-    password.shuffle.join
+    # Return both password and entropy
+    {
+      password: password.join,
+      entropy: entropy,
+      strength: password_strength(entropy)
+    }
   end
 
   private
@@ -53,36 +66,45 @@ module Passw
   # Generate the password based on options
   def self.generate_password(character_set, length, settings)
     password = []
+    max_attempts = length * 100  # Prevent infinite loops
+    attempts = 0
 
     # Ensure at least one character from each type if enforce_types is enabled
     if settings[:enforce_types]
-      password << lowercase.sample if settings[:lowercase]
-      password << uppercase.sample if settings[:uppercase]
-      password << symbols.sample if settings[:symbols]
-      password << numbers.sample if settings[:numbers]
+      required_chars = []
+      required_chars << secure_sample(lowercase) if settings[:lowercase]
+      required_chars << secure_sample(uppercase) if settings[:uppercase]
+      required_chars << secure_sample(symbols) if settings[:symbols]
+      required_chars << secure_sample(numbers) if settings[:numbers]
+      
+      # Shuffle required characters to avoid predictable positions
+      required_chars = secure_shuffle(required_chars)
+      password.concat(required_chars)
     end
 
     # Fill the rest of the password
-    while password.length < length
-      candidate = character_set.sample
+    while password.length < length && attempts < max_attempts
+      attempts += 1
+      candidate = secure_sample(character_set)
 
-      if settings[:duplicates]
-        password << candidate
-      else
-        # Avoid duplicates if duplicates option is false
-        next if password.include?(candidate)
-        password << candidate
-      end
+      # Check constraints before adding
+      next if !settings[:duplicates] && password.include?(candidate)
+      next if settings[:avoid_sequences] && creates_sequence?(password, candidate)
 
-      # Avoid sequences/repeating characters if avoid_sequences is true
-      if settings[:avoid_sequences] && password.size > 1
-        next_char = password[-1]
-        prev_char = password[-2]
-        if next_char.ord == prev_char.ord + 1 || next_char.ord == prev_char.ord - 1
-          password.pop
-        end
-      end
+      password << candidate
     end
+
+    # Final shuffle while preserving enforce_types if needed
+    if settings[:enforce_types]
+      # Keep required chars, shuffle the rest
+      required_count = count_required_types(settings)
+      required_part = password[0...required_count]
+      remaining_part = password[required_count..-1] || []
+      password = required_part + secure_shuffle(remaining_part)
+    else
+      password = secure_shuffle(password)
+    end
+
     password
   end
 
@@ -116,5 +138,75 @@ module Passw
 
   def self.numbers
     ('0'..'9').to_a
+  end
+
+  # Input validation
+  def self.validate_inputs(length, settings)
+    raise ArgumentError, "Length must be positive" if length.to_i <= 0
+    
+    # Check if any character types are enabled
+    enabled_types = [:lowercase, :uppercase, :symbols, :numbers].count { |type| settings[type] }
+    raise InvalidConstraintsError, "At least one character type must be enabled" if enabled_types == 0
+    
+    # Check if constraints are satisfiable
+    if settings[:enforce_types]
+      min_required = enabled_types
+      if length.to_i < min_required
+        raise InvalidConstraintsError, "Length (#{length}) must be at least #{min_required} when enforce_types is true"
+      end
+    end
+    
+    # Check if no-duplicates constraint is satisfiable
+    if !settings[:duplicates]
+      total_chars = 0
+      total_chars += lowercase.size if settings[:lowercase]
+      total_chars += uppercase.size if settings[:uppercase]
+      total_chars += symbols.size if settings[:symbols]
+      total_chars += numbers.size if settings[:numbers]
+      total_chars -= settings[:exclude].size
+      
+      if length.to_i > total_chars
+        raise InvalidConstraintsError, "Cannot generate #{length} unique characters from #{total_chars} available characters"
+      end
+    end
+  end
+
+  # Secure random sampling
+  def self.secure_sample(array)
+    array[SecureRandom.random_number(array.size)]
+  end
+
+  # Secure shuffling
+  def self.secure_shuffle(array)
+    # Fisher-Yates shuffle with SecureRandom
+    result = array.dup
+    (result.size - 1).downto(1) do |i|
+      j = SecureRandom.random_number(i + 1)
+      result[i], result[j] = result[j], result[i]
+    end
+    result
+  end
+
+  # Check if adding a character would create a sequence
+  def self.creates_sequence?(password, candidate)
+    return false if password.empty?
+    
+    last_char = password.last
+    return true if (candidate.ord - last_char.ord).abs == 1
+    
+    # Check for repeating characters
+    return true if candidate == last_char
+    
+    false
+  end
+
+  # Count required character types
+  def self.count_required_types(settings)
+    count = 0
+    count += 1 if settings[:lowercase]
+    count += 1 if settings[:uppercase]
+    count += 1 if settings[:symbols]
+    count += 1 if settings[:numbers]
+    count
   end
 end
